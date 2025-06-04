@@ -7,6 +7,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qr-scanner/1.4.2/qr-scanner.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
     <style>
         :root {
             --medical-blue: #2563eb;
@@ -878,12 +879,41 @@
             this.scanImageBtn.disabled = true;
 
             try {
-                const result = await QrScanner.scanImage(this.currentImage);
-                this.handleScanResult({ data: result });
+                // Create canvas to process image
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                
+                img.onload = () => {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Get image data
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    
+                    // Use jsQR to decode
+                    const code = jsQR(imageData.data, imageData.width, imageData.height);
+                    
+                    if (code) {
+                        this.handleScanResult({ data: code.data });
+                    } else {
+                        this.updateStatus('QR code tidak ditemukan di gambar', 'error');
+                    }
+                    
+                    this.scanImageBtn.disabled = false;
+                };
+                
+                img.onerror = () => {
+                    this.updateStatus('Gagal memuat gambar', 'error');
+                    this.scanImageBtn.disabled = false;
+                };
+                
+                img.src = this.currentImage;
+                
             } catch (error) {
                 console.error('Gagal memindai gambar:', error);
-                this.updateStatus('QR code tidak ditemukan di gambar', 'error');
-            } finally {
+                this.updateStatus('Gagal memindai gambar', 'error');
                 this.scanImageBtn.disabled = false;
             }
         }
