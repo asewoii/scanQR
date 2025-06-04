@@ -925,14 +925,15 @@
         handleScanResult(result) {
             if (!result) return;
 
+            const urlnya = result.data;
             this.updateStatus('QR Code ditemukan!', 'success');
-            this.showResult(result.data);
+            this.showResult(urlnya);
 
             // Redirect otomatis jika URL
-            if (result.data.startsWith('http')) {
+            if (urlnya.startsWith('http://') || urlnya.startsWith('https://')) {
                 setTimeout(() => {
-                    window.location.href = result.data;
-                }, 2000);
+                    window.location.href = urlnya;
+                }, 2000); // 2detik
             }
             
             if (this.isScanning) {
