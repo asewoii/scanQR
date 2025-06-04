@@ -435,234 +435,143 @@
     </div>
 
     <script>
-        class MedicalQRScanner {
-            constructor() {
-                this.scanner = null;
-                this.videoElement = document.getElementById('qr-video');
-                this.startBtn = document.getElementById('start-btn');
-                this.stopBtn = document.getElementById('stop-btn');
-                this.resultContainer = document.getElementById('result-container');
-                this.resultContent = document.getElementById('result-content');
-                this.statusIndicator = document.querySelector('.status-indicator');
-                this.cameraSelect = document.getElementById('camera-select');
-                
-                this.isScanning = false;
-                this.availableCameras = [];
-                
-                this.init();
-            }
+    class MedicalQRScanner {
+        constructor() {
+            this.scanner = null;
+            this.videoElement = document.getElementById('qr-video');
+            this.startBtn = document.getElementById('start-btn');
+            this.stopBtn = document.getElementById('stop-btn');
+            this.resultContainer = document.getElementById('result-container');
+            this.resultContent = document.getElementById('result-content');
+            this.statusIndicator = document.querySelector('.status-indicator');
+            this.cameraSelect = document.getElementById('camera-select');
+            
+            this.isScanning = false;
+            this.availableCameras = [];
+            
+            this.init();
+        }
 
-            async init() {
-                this.setupEventListeners();
-                await this.loadCameras();
-                this.updateStatus('Siap Memindai', 'scanning');
-            }
+        async init() {
+            this.setupEventListeners();
+            await this.loadCameras();
+            this.updateStatus('Siap Memindai', 'scanning');
+        }
 
-            setupEventListeners() {
-                this.startBtn.addEventListener('click', () => this.startScanning());
-                this.stopBtn.addEventListener('click', () => this.stopScanning());
-                this.cameraSelect.addEventListener('change', () => {
-                    if (this.isScanning) {
-                        this.stopScanning();
-                        setTimeout(() => this.startScanning(), 500);
-                    }
+        setupEventListeners() {
+            this.startBtn.addEventListener('click', () => this.startScanning());
+            this.stopBtn.addEventListener('click', () => this.stopScanning());
+            this.cameraSelect.addEventListener('change', () => {
+                if (this.isScanning) {
+                    this.stopScanning();
+                    setTimeout(() => this.startScanning(), 500);
+                }
+            });
+        }
+
+        async loadCameras() {
+            try {
+                const cameras = await QrScanner.listCameras(true);
+                this.availableCameras = cameras;
+
+                this.cameraSelect.innerHTML = '<option value="">Pilih Kamera...</option>';
+
+                cameras.forEach((camera, index) => {
+                    const option = document.createElement('option');
+                    option.value = camera.id || camera.deviceId || index;
+                    option.text = camera.label || `Kamera ${index + 1}`;
+                    this.cameraSelect.appendChild(option);
                 });
-            }
 
-            async loadCameras() {
-                try {
-                    const cameras = await QrScanner.listCameras();
-                    this.availableCameras = cameras;
-                    
-                    this.cameraSelect.innerHTML = '<option value="">Pilih Kamera...</option>';
-                    
-                    cameras.forEach((camera, index) => {
-                        const option = document.createElement('option');
-                        option.value = camera.id;
-                        option.textContent = camera.label || `Kamera ${index + 1}`;
-                        this.cameraSelect.appendChild(option);
-                    });
-
-                    // Auto select back camera if available
-                    const backCamera = cameras.find(camera => 
-                        camera.label.toLowerCase().includes('back') || 
-                        camera.label.toLowerCase().includes('rear')
-                    );
-                    
-                    if (backCamera) {
-                        this.cameraSelect.value = backCamera.id;
-                    } else if (cameras.length > 0) {
-                        this.cameraSelect.value = cameras[0].id;
-                    }
-                    
-                } catch (error) {
-                    console.error('Error loading cameras:', error);
-                    this.updateStatus('Error: Tidak dapat mengakses kamera', 'error');
+                // Set default camera if available
+                if (cameras.length > 0) {
+                    this.cameraSelect.value = cameras[0].id || cameras[0].deviceId || "";
                 }
-            }
-
-            async startScanning() {
-                try {
-                    const selectedCameraId = this.cameraSelect.value;
-                    if (!selectedCameraId) {
-                        alert('Silakan pilih kamera terlebih dahulu');
-                        return;
-                    }
-
-                    this.scanner = new QrScanner(
-                        this.videoElement,
-                        (result) => this.handleScanResult(result),
-                        {
-                            preferredCamera: selectedCameraId,
-                            highlightScanRegion: false,
-                            highlightCodeOutline: false,
-                            maxScansPerSecond: 5,
-                        }
-                    );
-
-                    await this.scanner.start();
-                    
-                    this.isScanning = true;
-                    this.startBtn.disabled = true;
-                    this.stopBtn.disabled = false;
-                    this.cameraSelect.disabled = true;
-                    
-                    this.updateStatus('Sedang Memindai...', 'scanning');
-                    this.resultContainer.style.display = 'none';
-                    
-                } catch (error) {
-                    console.error('Error starting scanner:', error);
-                    this.updateStatus('Error: Gagal memulai scanner', 'error');
-                    this.resetButtons();
-                }
-            }
-
-            stopScanning() {
-                if (this.scanner) {
-                    this.scanner.stop();
-                    this.scanner = null;
-                }
-                
-                this.isScanning = false;
-                this.resetButtons();
-                this.updateStatus('Scanner Dihentikan', 'error');
-            }
-
-            resetButtons() {
-                this.startBtn.disabled = false;
-                this.stopBtn.disabled = true;
-                this.cameraSelect.disabled = false;
-            }
-
-            handleScanResult(result) {
-                console.log('QR Code detected:', result);
-                
-                // Show result
-                this.resultContent.textContent = result;
-                this.resultContainer.style.display = 'block';
-                
-                // Update status
-                this.updateStatus('QR Code Terdeteksi!', 'success');
-                
-                // Optional: Stop scanning after successful scan
-                this.stopScanning();
-                
-                // Optional: Play success sound
-                this.playSuccessSound();
-                
-                // Optional: Send data to server or process further
-                this.processQRData(result);
-            }
-
-            updateStatus(message, type) {
-                const statusClasses = {
-                    scanning: 'status-scanning',
-                    success: 'status-success', 
-                    error: 'status-error'
-                };
-                
-                const icons = {
-                    scanning: 'fas fa-circle pulse',
-                    success: 'fas fa-check-circle',
-                    error: 'fas fa-exclamation-circle'
-                };
-                
-                this.statusIndicator.className = `status-indicator ${statusClasses[type]}`;
-                this.statusIndicator.innerHTML = `
-                    <i class="${icons[type]}"></i>
-                    ${message}
-                `;
-            }
-
-            playSuccessSound() {
-                // Create audio context for success sound
-                try {
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    
-                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-                    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
-                    
-                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-                    
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.2);
-                } catch (error) {
-                    console.log('Audio not supported');
-                }
-            }
-
-            processQRData(qrData) {
-                // Process QR data - customize based on your needs
-                console.log('Processing QR data:', qrData);
-                
-                // Example: Check if it's a URL
-                if (this.isValidURL(qrData)) {
-                    console.log('QR contains URL:', qrData);
-                    // Optional: Ask user if they want to open the URL
-                    if (confirm('QR code berisi URL. Buka link?')) {
-                        window.open(qrData, '_blank');
-                    }
-                }
-                
-                // Example: Send to server
-                this.sendToServer(qrData);
-            }
-
-            isValidURL(string) {
-                try {
-                    new URL(string);
-                    return true;
-                } catch (_) {
-                    return false;
-                }
-            }
-
-            sendToServer(qrData) {
-                fetch('/api/process-qr', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },body: JSON.stringify({ qr_data: qrData })
-                }).then(response => response.json())
-                .then(data => {
-                    console.log('Server response:', data);
-                }).catch(error => {
-                    console.error('Error sending to server:', error);
-                });
+            } catch (e) {
+                console.error('Gagal mendapatkan daftar kamera:', e);
+                this.updateStatus('Tidak dapat mengakses kamera', 'error');
+                this.startBtn.disabled = true;
             }
         }
 
-        // Initialize scanner when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            new MedicalQRScanner();
-        });
-    </script>
+        startScanning() {
+            if (this.isScanning) return;
+
+            const selectedCameraId = this.cameraSelect.value || undefined;
+
+            this.scanner = new QrScanner(
+                this.videoElement,
+                result => this.handleScanResult(result),
+                {
+                    preferredCamera: selectedCameraId,
+                    highlightScanRegion: true,
+                    highlightCodeOutline: true,
+                }
+            );
+
+            this.scanner.start()
+                .then(() => {
+                    this.isScanning = true;
+                    this.updateStatus('Sedang Memindai...', 'scanning');
+                    this.startBtn.disabled = true;
+                    this.stopBtn.disabled = false;
+                    this.resultContainer.style.display = 'none';
+                })
+                .catch(e => {
+                    console.error('Gagal memulai scanner:', e);
+                    this.updateStatus('Gagal memulai pemindaian', 'error');
+                });
+        }
+
+        stopScanning() {
+            if (!this.isScanning) return;
+
+            this.scanner.stop();
+            this.scanner.destroy();
+            this.scanner = null;
+
+            this.isScanning = false;
+            this.updateStatus('Pemindaian berhenti', 'success');
+            this.startBtn.disabled = false;
+            this.stopBtn.disabled = true;
+        }
+
+        handleScanResult(result) {
+            if (!result) return;
+
+            this.updateStatus('QR Code ditemukan!', 'success');
+            this.showResult(result.data);
+            this.stopScanning();
+        }
+
+        updateStatus(text, status) {
+            this.statusIndicator.textContent = '';
+            this.statusIndicator.className = 'status-indicator';
+
+            if (status === 'scanning') {
+                this.statusIndicator.classList.add('status-scanning');
+                this.statusIndicator.innerHTML = '<i class="fas fa-circle pulse"></i> ' + text;
+            } else if (status === 'success') {
+                this.statusIndicator.classList.add('status-success');
+                this.statusIndicator.innerHTML = '<i class="fas fa-check-circle"></i> ' + text;
+            } else if (status === 'error') {
+                this.statusIndicator.classList.add('status-error');
+                this.statusIndicator.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + text;
+            } else {
+                this.statusIndicator.textContent = text;
+            }
+        }
+
+        showResult(data) {
+            this.resultContent.textContent = data;
+            this.resultContainer.style.display = 'block';
+        }
+    }
+
+    // Inisialisasi scanner setelah DOM siap
+    document.addEventListener('DOMContentLoaded', () => {
+        new MedicalQRScanner();
+    });
+</script>
 </body>
 </html>
