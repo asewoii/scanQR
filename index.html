@@ -910,3 +910,28 @@
                 this.statusIndicator.classList.add('status-success');
                 this.statusIndicator.innerHTML = '<i class="fas fa-check-circle"></i> ' + text;
             } else if (status === 'error') {
+                this.statusIndicator.classList.add('status-error');
+                this.statusIndicator.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + text;
+            } else {
+                this.statusIndicator.textContent = text;
+            }
+        }
+
+        showResult(data) {
+            this.resultContent.innerHTML = `<a href="${data}" target="_blank" rel="noopener noreferrer">${data}</a>`;
+            this.resultContainer.style.display = 'block';
+        }
+
+        showPasteNotification() {
+            this.pasteNotification.classList.add('show');
+            setTimeout(() => {
+                this.pasteNotification.classList.remove('show');
+            }, 3000);
+        }
+    }
+
+    // Inisialisasi scanner setelah DOM siap
+    document.addEventListener('DOMContentLoaded', () => {
+        new EnhancedQRScanner();
+    });
+</script>
