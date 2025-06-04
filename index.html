@@ -563,7 +563,7 @@
         }
 
         showResult(data) {
-            this.resultContent.textContent = data;
+            this.resultContent.innerHTML  = `<a href="${data}" target="_blank" rel="noopener noreferrer">${data}</a>`;
             this.resultContainer.style.display = 'block';
         }
     }
