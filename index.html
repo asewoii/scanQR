@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Scanner - Klinik Medis</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qr-scanner/1.4.2/qr-scanner.umd.min.js"></script>
     <style>
         :root {
@@ -113,6 +113,42 @@
             font-weight: 400;
         }
 
+        .mode-tabs {
+            display: flex;
+            background: var(--medical-gray);
+            border-radius: 16px;
+            padding: 4px;
+            margin-bottom: 2rem;
+            gap: 2px;
+        }
+
+        .mode-tab {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 12px;
+            background: transparent;
+            color: var(--text-light);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .mode-tab.active {
+            background: var(--medical-blue);
+            color: white;
+            box-shadow: var(--shadow-medical);
+        }
+
+        .mode-tab:hover:not(.active) {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--medical-blue);
+        }
+
         .camera-container {
             position: relative;
             background: var(--medical-gray);
@@ -121,6 +157,11 @@
             margin-bottom: 2rem;
             border: 3px solid var(--medical-blue);
             box-shadow: var(--shadow-medical);
+            display: none;
+        }
+
+        .camera-container.active {
+            display: block;
         }
 
         #qr-video {
@@ -128,6 +169,84 @@
             height: 300px;
             object-fit: cover;
             display: block;
+        }
+
+        .upload-container {
+            background: var(--medical-gray);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 3px dashed var(--medical-blue);
+            box-shadow: var(--shadow-medical);
+            display: none;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .upload-container.active {
+            display: block;
+        }
+
+        .upload-container.dragover {
+            border-color: var(--accent-green);
+            background: rgba(5, 150, 105, 0.05);
+            transform: scale(1.02);
+        }
+
+        .upload-area {
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--medical-blue);
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .keyboard-hint {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 1rem;
+        }
+
+        .keyboard-hint kbd {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .preview-container {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-medical);
+            object-fit: contain;
         }
 
         .scanner-overlay {
@@ -195,6 +314,7 @@
             gap: 1rem;
             margin-bottom: 2rem;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         .btn {
@@ -232,6 +352,16 @@
             background: var(--medical-blue);
             color: white;
             transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--accent-green), var(--medical-mint));
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(5, 150, 105, 0.15);
         }
 
         .btn:disabled {
@@ -334,6 +464,11 @@
 
         .camera-selection {
             margin-bottom: 1rem;
+            display: none;
+        }
+
+        .camera-selection.active {
+            display: block;
         }
 
         .camera-select {
@@ -351,6 +486,28 @@
         .camera-select:focus {
             outline: none;
             box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .paste-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--accent-green);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-medical);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .paste-notification.show {
+            transform: translateX(0);
         }
 
         @media (max-width: 576px) {
@@ -381,6 +538,11 @@
                 width: 100%;
                 max-width: 200px;
             }
+
+            .mode-tabs {
+                flex-direction: column;
+                gap: 4px;
+            }
         }
     </style>
 </head>
@@ -391,7 +553,7 @@
                 <i class="fas fa-qrcode"></i>
                 QR Scanner
             </h1>
-            <p class="scanner-subtitle">Arahkan kamera ke QR code untuk memindai</p>
+            <p class="scanner-subtitle">Pindai QR code dengan kamera atau upload gambar</p>
         </div>
 
         <div class="status-indicator status-scanning">
@@ -399,18 +561,48 @@
             Siap Memindai
         </div>
 
-        <div class="camera-selection">
+        <div class="mode-tabs">
+            <button class="mode-tab active" data-mode="camera">
+                <i class="fas fa-camera"></i>
+                Kamera
+            </button>
+            <button class="mode-tab" data-mode="upload">
+                <i class="fas fa-upload"></i>
+                Upload
+            </button>
+        </div>
+
+        <div class="camera-selection active">
             <select class="camera-select" id="camera-select">
                 <option value="">Pilih Kamera...</option>
             </select>
         </div>
 
-        <div class="camera-container">
+        <div class="camera-container active">
             <video id="qr-video" playsinline></video>
             <div class="scanner-overlay">
                 <div class="scanner-line"></div>
             </div>
         </div>
+
+        <div class="upload-container">
+            <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">Klik untuk upload gambar</div>
+                <div class="upload-hint">atau drag & drop gambar QR code disini</div>
+                <div class="preview-container">
+                    <img id="preview-image" class="preview-image" alt="Preview">
+                </div>
+                <div class="keyboard-hint">
+                    <i class="fas fa-keyboard"></i>
+                    Tekan <kbd>Ctrl</kbd> + <kbd>V</kbd> untuk paste gambar dari clipboard
+                </div>
+            </div>
+        </div>
+
+        <input type="file" id="file-input" class="file-input" accept="image/*">
 
         <div class="control-buttons">
             <button class="btn btn-primary" id="start-btn">
@@ -420,6 +612,10 @@
             <button class="btn btn-secondary" id="stop-btn" disabled>
                 <i class="fas fa-stop"></i>
                 Berhenti
+            </button>
+            <button class="btn btn-success" id="scan-image-btn" style="display: none;">
+                <i class="fas fa-search"></i>
+                Scan Gambar
             </button>
         </div>
 
@@ -434,20 +630,35 @@
         </div>
     </div>
 
+    <div class="paste-notification" id="paste-notification">
+        <i class="fas fa-clipboard-check"></i>
+        Gambar berhasil di-paste!
+    </div>
+
     <script>
-    class MedicalQRScanner {
+    class EnhancedQRScanner {
         constructor() {
             this.scanner = null;
             this.videoElement = document.getElementById('qr-video');
             this.startBtn = document.getElementById('start-btn');
             this.stopBtn = document.getElementById('stop-btn');
+            this.scanImageBtn = document.getElementById('scan-image-btn');
             this.resultContainer = document.getElementById('result-container');
             this.resultContent = document.getElementById('result-content');
             this.statusIndicator = document.querySelector('.status-indicator');
             this.cameraSelect = document.getElementById('camera-select');
+            this.fileInput = document.getElementById('file-input');
+            this.previewImage = document.getElementById('preview-image');
+            this.previewContainer = document.querySelector('.preview-container');
+            this.uploadContainer = document.querySelector('.upload-container');
+            this.cameraContainer = document.querySelector('.camera-container');
+            this.cameraSelection = document.querySelector('.camera-selection');
+            this.pasteNotification = document.getElementById('paste-notification');
             
             this.isScanning = false;
             this.availableCameras = [];
+            this.currentMode = 'camera';
+            this.currentImage = null;
             
             this.init();
         }
@@ -459,6 +670,7 @@
         }
 
         setupEventListeners() {
+            // Camera controls
             this.startBtn.addEventListener('click', () => this.startScanning());
             this.stopBtn.addEventListener('click', () => this.stopScanning());
             this.cameraSelect.addEventListener('change', () => {
@@ -467,6 +679,56 @@
                     setTimeout(() => this.startScanning(), 500);
                 }
             });
+
+            // Mode switching
+            document.querySelectorAll('.mode-tab').forEach(tab => {
+                tab.addEventListener('click', () => this.switchMode(tab.dataset.mode));
+            });
+
+            // File upload
+            this.fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+            this.scanImageBtn.addEventListener('click', () => this.scanCurrentImage());
+
+            // Drag and drop
+            this.uploadContainer.addEventListener('dragover', (e) => this.handleDragOver(e));
+            this.uploadContainer.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+            this.uploadContainer.addEventListener('drop', (e) => this.handleDrop(e));
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => this.handleKeyboard(e));
+            document.addEventListener('paste', (e) => this.handlePaste(e));
+        }
+
+        switchMode(mode) {
+            this.currentMode = mode;
+            
+            // Update tab appearance
+            document.querySelectorAll('.mode-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.mode === mode);
+            });
+
+            // Show/hide containers
+            this.cameraContainer.classList.toggle('active', mode === 'camera');
+            this.uploadContainer.classList.toggle('active', mode === 'upload');
+            this.cameraSelection.classList.toggle('active', mode === 'camera');
+
+            // Update buttons
+            if (mode === 'camera') {
+                this.startBtn.style.display = 'flex';
+                this.stopBtn.style.display = 'flex';
+                this.scanImageBtn.style.display = 'none';
+            } else {
+                this.startBtn.style.display = 'none';
+                this.stopBtn.style.display = 'none';
+                this.scanImageBtn.style.display = this.currentImage ? 'flex' : 'none';
+            }
+
+            // Stop camera if switching away
+            if (mode !== 'camera' && this.isScanning) {
+                this.stopScanning();
+            }
+
+            this.updateStatus(mode === 'camera' ? 'Mode Kamera' : 'Mode Upload', 'scanning');
         }
 
         async loadCameras() {
@@ -483,7 +745,6 @@
                     this.cameraSelect.appendChild(option);
                 });
 
-                // Set default camera if available
                 if (cameras.length > 0) {
                     this.cameraSelect.value = cameras[0].id || cameras[0].deviceId || "";
                 }
@@ -495,7 +756,7 @@
         }
 
         startScanning() {
-            if (this.isScanning) return;
+            if (this.isScanning || this.currentMode !== 'camera') return;
 
             const selectedCameraId = this.cameraSelect.value || undefined;
 
@@ -536,12 +797,106 @@
             this.stopBtn.disabled = true;
         }
 
+        handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                this.loadImageFile(file);
+            }
+        }
+
+        handleDragOver(event) {
+            event.preventDefault();
+            this.uploadContainer.classList.add('dragover');
+        }
+
+        handleDragLeave(event) {
+            event.preventDefault();
+            this.uploadContainer.classList.remove('dragover');
+        }
+
+        handleDrop(event) {
+            event.preventDefault();
+            this.uploadContainer.classList.remove('dragover');
+            
+            const files = event.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                this.loadImageFile(files[0]);
+            }
+        }
+
+        handleKeyboard(event) {
+            // Ctrl+V for paste
+            if (event.ctrlKey && event.key === 'v' && this.currentMode === 'upload') {
+                // Paste handling is done in handlePaste
+                return;
+            }
+
+            // Space or Enter to scan image
+            if ((event.code === 'Space' || event.code === 'Enter') && 
+                this.currentMode === 'upload' && this.currentImage && 
+                !event.target.matches('button, input, select, textarea')) {
+                event.preventDefault();
+                this.scanCurrentImage();
+            }
+        }
+
+        async handlePaste(event) {
+            if (this.currentMode !== 'upload') return;
+
+            const items = event.clipboardData?.items;
+            if (!items) return;
+
+            for (let item of items) {
+                if (item.type.startsWith('image/')) {
+                    event.preventDefault();
+                    const file = item.getAsFile();
+                    if (file) {
+                        this.loadImageFile(file);
+                        this.showPasteNotification();
+                    }
+                    break;
+                }
+            }
+        }
+
+        loadImageFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.previewImage.src = e.target.result;
+                this.previewContainer.style.display = 'block';
+                this.currentImage = e.target.result;
+                this.scanImageBtn.style.display = 'flex';
+                this.updateStatus('Gambar dimuat, siap untuk di-scan', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async scanCurrentImage() {
+            if (!this.currentImage) return;
+
+            this.updateStatus('Memindai gambar...', 'scanning');
+            this.scanImageBtn.disabled = true;
+
+            try {
+                const result = await QrScanner.scanImage(this.currentImage);
+                this.handleScanResult({ data: result });
+            } catch (error) {
+                console.error('Gagal memindai gambar:', error);
+                this.updateStatus('QR code tidak ditemukan di gambar', 'error');
+            } finally {
+                this.scanImageBtn.disabled = false;
+            }
+        }
+
         handleScanResult(result) {
             if (!result) return;
 
             this.updateStatus('QR Code ditemukan!', 'success');
             this.showResult(result.data);
-            this.stopScanning();
+            
+            if (this.isScanning) {
+                this.stopScanning();
+            }
         }
 
         updateStatus(text, status) {
@@ -555,23 +910,3 @@
                 this.statusIndicator.classList.add('status-success');
                 this.statusIndicator.innerHTML = '<i class="fas fa-check-circle"></i> ' + text;
             } else if (status === 'error') {
-                this.statusIndicator.classList.add('status-error');
-                this.statusIndicator.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + text;
-            } else {
-                this.statusIndicator.textContent = text;
-            }
-        }
-
-        showResult(data) {
-            this.resultContent.innerHTML  = `<a href="${data}" target="_blank" rel="noopener noreferrer">${data}</a>`;
-            this.resultContainer.style.display = 'block';
-        }
-    }
-
-    // Inisialisasi scanner setelah DOM siap
-    document.addEventListener('DOMContentLoaded', () => {
-        new MedicalQRScanner();
-    });
-</script>
-</body>
-</html>
