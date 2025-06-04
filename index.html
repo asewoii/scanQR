@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simple QR Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      text-align: center;
+    }
+    #reader {
+      margin: auto;
+      width: 300px;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 1.2em;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simple QR Code Scanner</h1>
+  <div id="reader"></div>
+  <div id="result"></div>
+
+  <script>
+    function onScanSuccess(decodedText, decodedResult) {
+      document.getElementById('result').innerText = `Hasil Scan: ${decodedText}`;
+      html5QrcodeScanner.clear(); // stop scanning setelah dapat hasil
+    }
+
+    function onScanFailure(error) {
+      // bisa diabaikan jika ingin terus scanning
+    }
+
+    let html5QrcodeScanner = new Html5Qrcode("reader");
+    html5QrcodeScanner.start(
+      { facingMode: "environment" }, 
+      { fps: 10, qrbox: 250 }, 
+      onScanSuccess, 
+      onScanFailure
+    ).catch(err => {
+      alert("Gagal akses kamera: " + err);
+    });
+  </script>
+</body>
+</html>
