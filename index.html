@@ -668,6 +668,10 @@
             this.setupEventListeners();
             await this.loadCameras();
             this.updateStatus('Siap Memindai', 'scanning');
+            if(this.availableCameras.length > 0) {
+                this.switchMode('camera');
+                this.startScanning(); // ini akan membuat scan otomatis akan mulai
+            }
         }
 
         setupEventListeners() {
@@ -923,6 +927,13 @@
 
             this.updateStatus('QR Code ditemukan!', 'success');
             this.showResult(result.data);
+
+            // Redirect otomatis jika URL
+            if (result.data.startsWith('http')) {
+                setTimeout(() => {
+                    window.location.href = result.data;
+                }, 2000);
+            }
             
             if (this.isScanning) {
                 this.stopScanning();
