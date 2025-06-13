@@ -929,11 +929,20 @@
             this.updateStatus('QR Code ditemukan!', 'success');
             this.showResult(urlnya);
 
-            // Redirect otomatis jika URL
-            if (urlnya.startsWith('http://') || urlnya.startsWith('https://')) {
-                setTimeout(() => {
-                    window.location.href = urlnya;
-                }, 2000); // 2detik
+            // Url bedasarkan kode QR
+            if (urlnya.startsWith('IDP') || urlnya.startsWith('ID')) {
+                // QR Pasien
+                const redirectUrl = 'linkurlapsien' + endcodeURIComponent(urlnya);
+                this.updateStatus('Mengarahkan Ke Data Pasien...', 'success');
+                setTimeout(() => window.location.href = redirectUrl, 2000);
+            } else if (urlnya.startsWith('KRS')) {
+                // QR Kunjungan
+                const redirectUrl = 'linkurlkunjungan' + encodeURIComponent(urlnya);
+                this.updateStatus('Mengarahkan ke data kunjungan...', 'success');
+                setTimeout(() => window.location.href = redirectUrl, 2000);
+            } else {
+                // Jika Tidak Sesuai
+                this.updateStatus('Data Tidak Sesuai');
             }
             
             if (this.isScanning) {
